@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>添加数据库</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="./layui/css/layui.css" th:href="@{/layui/css/layui.css}" media="all">
+    <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+    <!--[if lt IE 9]>
+    <script src="./js/html5.min.js" th:src="@{/js/html5.min.js}"></script>
+    <script src="./js/respond.min.js" th:src="@{/js/respond.min.js}"></script>
+    <![endif]-->
+    <script type="text/javascript" charset="utf-8" th:inline="javascript">
+        var ctxPath = /*[[@{/}]]*/'';
+    </script>
+</head>
+<body>
+<div class="layui-form" lay-filter="layuiadmin-form-useradmin" id="layuiadmin-form-useradmin"
+     style="padding: 20px 20px 0 0;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">类型</label>
+        <div class="layui-input-block">
+            <select name="dbType" lay-filter="dbType">
+                <option value="MySQL">MySQL</option>
+                <option value="Oracle">Oracle</option>
+                <option value="Redis">Redis</option>
+                <option value="Mongo">Mongo</option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">连接名</label>
+        <div class="layui-input-block">
+            <input type="text" name="connName" autocomplete="off" class="layui-input" placeholder="请输入连接名"
+                   lay-verify="required" lay-verType="tips">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label" id="urlLabel">URL</label>
+        <div class="layui-input-block">
+            <textarea id="url" name="url" class="layui-textarea" placeholder="请输入URL" autocomplete="off"
+                      lay-verify="required" lay-verType="tips"></textarea>
+        </div>
+    </div>
+    <div class="layui-form-item" id="usernameDiv">
+        <label class="layui-form-label">用户名</label>
+        <div class="layui-input-block">
+            <input type="text" name="username" autocomplete="off" class="layui-input" placeholder="请输入用户名"
+                   lay-verify="username" lay-verType="tips">
+        </div>
+    </div>
+    <div class="layui-form-item" id="passwordDiv">
+        <label class="layui-form-label">密码</label>
+        <div class="layui-input-block">
+            <input type="password" name="password" autocomplete="off" class="layui-input" placeholder="请输入密码"
+                   lay-verify="password" lay-verType="tips">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">环境</label>
+        <div class="layui-input-block">
+            <select name="monitorEnv">
+                <option value="">不设置</option>
+                <option th:each="monitorEnv:${monitorEnvs}" th:value="${monitorEnv}"
+                        th:text="${monitorEnv}"></option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">分组</label>
+        <div class="layui-input-block">
+            <select name="monitorGroup">
+                <option value="">不设置</option>
+                <option th:each="monitorGroup:${monitorGroups}" th:value="${monitorGroup}"
+                        th:text="${monitorGroup}"></option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">描述</label>
+        <div class="layui-input-block">
+            <textarea name="dbDesc" class="layui-textarea" placeholder="请输入描述" autocomplete="off"
+                      lay-verType="tips"></textarea>
+        </div>
+    </div>
+    <div class="layui-form-item layui-hide">
+        <input type="button" lay-submit lay-filter="LAY-front-submit" id="LAY-front-submit" value="确认">
+    </div>
+</div>
+<script src="./layui/layui.js" th:src="@{/layui/layui.js}"></script>
+<script>
+    layui.config({
+        base: ctxPath //静态资源所在路径
+    }).extend({
+        index: 'lib/index' //主入口模块
+    }).use(['index', 'form', 'jquery'], function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        // Redis数据库
+        var redis = 'Redis';
+        // mongo数据库
+        var mongo = 'Mongo';
+        // 监听数据库类型下拉选择
+        form.on('select(dbType)', function (data) {
+            var dbType = data.value;
+            // Redis数据库
+            if (dbType === redis) {
+                $('#urlLabel').text('地址');
+                $('#url').attr('placeholder', '例如：127.0.0.1:6379');
+                $('#usernameDiv').hide();
+                $('#passwordDiv').show();
+            }
+            // mongo数据库
+            else if (dbType === mongo) {
+                $('#urlLabel').text('URL');
+                $('#url').attr('placeholder', '请输入URL');
+                $('#usernameDiv').hide();
+                $('#passwordDiv').hide();
+            } else {
+                $('#urlLabel').text('URL');
+                $('#url').attr('placeholder', '请输入URL');
+                $('#usernameDiv').show();
+                $('#passwordDiv').show();
+            }
+        });
+        form.verify({
+            // 用户名
+            username: function (value) {
+                var dbType = $('select[name="dbType"]').val();
+                if (dbType !== redis && dbType !== mongo && value.length === 0) {
+                    return '必填项不能为空';
+                }
+            },
+            password: function (value) {
+                var dbType = $('select[name="dbType"]').val();
+                if (dbType !== redis && dbType !== mongo && value.length === 0) {
+                    return '必填项不能为空';
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

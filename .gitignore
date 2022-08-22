@@ -1,0 +1,11 @@
+*.project
+*.classpath
+*.class
+*.iml
+*.log
+
+.git
+.idea
+.settings
+liblog4phoenix
+target

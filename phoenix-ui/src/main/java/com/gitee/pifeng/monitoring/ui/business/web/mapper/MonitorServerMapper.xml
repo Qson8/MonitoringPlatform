@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gitee.pifeng.monitoring.ui.business.web.dao.IMonitorServerDao">
+    <!-- 服务器在线率统计 -->
+    <select id="getServerOnlineRateStatistics" resultType="java.util.Map" databaseId="mysql">
+        select tmp.serverSum                                                         as serverSum,
+               tmp.serverOnLineSum                                                   as serverOnLineSum,
+               tmp.serverSum - tmp.serverOnLineSum                                   as serverOffLineSum,
+               ifnull(round(tmp.serverOnLineSum / tmp.serverSum, 2) * 100, '100.00') as serverOnLineRate
+        from (
+                 select count(1)                     as serverSum,
+                        ifnull(sum(ms.IS_ONLINE), 0) as serverOnLineSum
+                 from MONITOR_SERVER ms) tmp
+    </select>
+
+    <!-- 获取服务器列表 -->
+    <select id="getMonitorServerList" databaseId="mysql"
+            resultType="com.gitee.pifeng.monitoring.ui.business.web.vo.MonitorServerVo">
+        SELECT S.*,
+        O.OS_NAME,
+        CAST(AVG(1 - CPU.CPU_IDLE)*100 AS DECIMAL(10, 2)) AS CPU_USER_PERCENT,
+        CAST(AVG(MEMORY.MEN_USED_PERCENT)*100 AS DECIMAL(10, 2)) AS MEN_USED_PERCENT,
+        NETCARD.DOWNLOAD_BPS,
+        NETCARD.UPLOAD_BPS,
+        AVERAGE.FIFTEEN AS LOAD_AVERAGE
+        FROM MONITOR_SERVER S
+        LEFT JOIN MONITOR_SERVER_OS O ON O.IP =S.IP
+        LEFT JOIN MONITOR_SERVER_CPU CPU ON CPU.IP = S.IP
+        LEFT JOIN MONITOR_SERVER_MEMORY MEMORY ON MEMORY.IP = S.IP
+        LEFT JOIN MONITOR_SERVER_NETCARD NETCARD ON (NETCARD.IP = S.IP AND NETCARD.ADDRESS = S.IP)
+        LEFT JOIN MONITOR_SERVER_LOAD_AVERAGE AVERAGE ON AVERAGE.IP=S.IP
+        <where>
+            <if test="criteria.ip!=null and criteria.ip!=''">
+                AND S.IP like concat('%',#{criteria.ip},'%')
+            </if>
+            <if test="criteria.serverName!=null and criteria.serverName!=''">
+                AND S.SERVER_NAME like concat('%',#{criteria.serverName},'%')
+            </if>
+            <if test="criteria.isOnline!=null and criteria.isOnline!=''">
+                AND S.IS_ONLINE=#{criteria.isOnline}
+            </if>
+            <if test="criteria.monitorEnv!=null and criteria.monitorEnv!=''">
+                AND S.MONITOR_ENV like concat('%',#{criteria.monitorEnv},'%')
+            </if>
+            <if test="criteria.monitorGroup!=null and criteria.monitorGroup!=''">
+                AND S.MONITOR_GROUP like concat('%',#{criteria.monitorGroup},'%')
+            </if>
+        </where>
+        GROUP BY S.ID,
+        S.IP,
+        S.SERVER_NAME,
+        S.SERVER_SUMMARY,
+        S.IS_ONLINE,
+        S.CONN_FREQUENCY,
+        S.INSERT_TIME,
+        S.UPDATE_TIME,
+        O.OS_NAME,
+        NETCARD.DOWNLOAD_BPS,
+        NETCARD.UPLOAD_BPS,
+        AVERAGE.FIFTEEN
+        ORDER BY S.ID
+    </select>
+</mapper>

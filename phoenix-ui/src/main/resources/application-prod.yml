@@ -1,0 +1,28 @@
+##############################################server配置#################################################
+server:
+  port: 443
+  ssl:
+    enabled: true
+    #你生成的证书名字
+    key-store: classpath:monitoring.p12
+    #密钥库密码
+    key-store-password: 19920720
+    key-store-type: PKCS12
+    #别名
+    key-alias: selfsigned_localhost_sslserver
+
+
+###############################################数据源配置##################################################
+spring:
+  datasource:
+    druid:
+      #数据源配置
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://ip:3306/phoenix?useSSL=false&serverTimezone=GMT%2b8&useUnicode=true&characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false&rewriteBatchedStatements=true
+      username:
+      password:
+
+
+##############################################第三方认证配置#################################################
+third-auth:
+  enable: false
